@@ -10,6 +10,61 @@ import (
 	"text/template"
 )
 
+// Article represents a single article in /v3/get list
+type Article struct {
+	ItemID        string `json:"item_id"`
+	ResolvedID    string `json:"resolved_id"`
+	GivenURL      string `json:"given_url"`
+	GivenTitle    string `json:"given_title"`
+	Favorite      string `json:"favorite"`
+	Status        string `json:"status"`
+	ResolvedURL   string `json:"resolved_url"`
+	ResolvedTitle string `json:"resolved_title"`
+	Excerpt       string `json:"excerpt"`
+	IsArticle     string `json:"is_article"`
+	HasVideo      string `json:"has_video"`
+	HasImage      string `json:"has_image"`
+	WordsCount    string `json:"words_count"`
+}
+
+const (
+	// StateUnread requests only unread articles
+	StateUnread = "unread"
+	// StateArchived requests only archived articles
+	StateArchived = "archive"
+	// StateAll requests unread and archived articles
+	StateAll = "all"
+	// TagUntagged requests only articles without tags
+	TagUntagged = "_untagged_"
+	// DetailTypeSimple requests only basic details
+	DetailTypeSimple = "simple"
+	// DetailTypeComplete requests all details
+	DetailTypeComplete = "complete"
+	// SortNewest sorts from new to old
+	SortNewest = "newest"
+	// SortOldest sorts from old to new
+	SortOldest = "oldest"
+)
+
+// RetrieveRequest holds the json scheme for /v3/get request
+type RetrieveRequest struct {
+	State       string `json:"state"`
+	Favorite    int    `json:"favorite"`
+	Tag         string `json:"tag"`
+	Count       int    `json:"count"`
+	Offset      int    `json:"offset"`
+	Sort        string `json:"sort"`
+	DetailType  string `json:"detailType"`
+	ConsumerKey string `json:"consumer_key"`
+	AccessToken string `json:"access_token"`
+}
+
+// RetrieveResponse holds the json scheme for /v3/get response
+type RetrieveResponse struct {
+	Status int `json:"status"`
+	List   map[string]*Article
+}
+
 func makeAuthURL(code, redirectURL string) string {
 	var data = struct {
 		Code        string
@@ -28,7 +83,7 @@ func makeAuthURL(code, redirectURL string) string {
 	return buf.String()
 }
 
-func jsonRequest(url string, reqJSON interface{}, respJSON interface{}) (err error) {
+func doJSONRequest(url string, reqJSON interface{}, respJSON interface{}) (err error) {
 	var (
 		buf     = bytes.NewBuffer([]byte{})
 		client  = http.Client{}
@@ -72,4 +127,12 @@ func jsonRequest(url string, reqJSON interface{}, respJSON interface{}) (err err
 	}
 
 	return err
+}
+
+func retrieve(request *RetrieveRequest, response *RetrieveResponse) error {
+	return doJSONRequest(
+		"https://getpocket.com/v3/get",
+		request,
+		response,
+	)
 }

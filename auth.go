@@ -35,7 +35,7 @@ func obtainCode(consumerKey string) (code string, err error) {
 		response = codeResponse{}
 	)
 
-	err = jsonRequest(
+	err = doJSONRequest(
 		"https://getpocket.com/v3/oauth/request",
 		&request,
 		&response,
@@ -56,7 +56,7 @@ func authorize(consumerKey, code string) (*authorizeResponse, error) {
 		response = authorizeResponse{}
 	)
 
-	err := jsonRequest(
+	err := doJSONRequest(
 		"https://getpocket.com/v3/oauth/authorize",
 		&request,
 		&response,
