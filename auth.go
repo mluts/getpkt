@@ -27,6 +27,8 @@ type authorizeResponse struct {
 }
 
 func obtainCode(consumerKey string) (code string, err error) {
+	log.Println("Getting code...")
+
 	var (
 		request = codeRequest{
 			consumerKey,
@@ -48,6 +50,8 @@ func obtainCode(consumerKey string) (code string, err error) {
 }
 
 func authorize(consumerKey, code string) (*authorizeResponse, error) {
+	log.Println("Authorizing given code")
+
 	var (
 		request = authorizeRequest{
 			consumerKey,
@@ -69,6 +73,8 @@ func authorize(consumerKey, code string) (*authorizeResponse, error) {
 }
 
 func authenticate(consumerKey string) (accessToken string, err error) {
+	log.Println("Getting access token...")
+
 	code, err := obtainCode(consumerKey)
 	if len(code) == 0 {
 		return "", fmt.Errorf("Received no code")
@@ -82,6 +88,8 @@ func authenticate(consumerKey string) (accessToken string, err error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to authorize: %v", err)
 	}
+
+	log.Println("Have access token!")
 
 	return response.AccessToken, nil
 }

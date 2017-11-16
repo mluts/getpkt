@@ -79,7 +79,6 @@ func main() {
 		}
 		config.AccessToken = accessToken
 		writeConfig(configFilePath, config)
-		log.Println("Written to config")
 	case os.Args[1] == "sync":
 		config := mustInitConfig()
 

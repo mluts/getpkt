@@ -30,7 +30,9 @@ func readConsumerKey() string {
 }
 
 func writeConfig(path string, config *appConfig) (err error) {
-	return writeJSON(path, config)
+	err = writeJSON(path, config)
+	log.Println("Config file written")
+	return err
 }
 
 func writeJSON(path string, object interface{}) (err error) {
