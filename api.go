@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"text/template"
 )
 
@@ -25,6 +26,24 @@ type Article struct {
 	HasVideo      string `json:"has_video"`
 	HasImage      string `json:"has_image"`
 	WordsCount    string `json:"words_count"`
+	TimeAdded     string `json:"time_added"`
+}
+
+// Articles is a collection of Article
+type Articles []*Article
+
+func (a Articles) Len() int {
+	return len(a)
+}
+
+func (a Articles) Less(i, j int) bool {
+	return strings.Compare(a[i].TimeAdded, a[j].TimeAdded) == 1
+}
+
+func (a Articles) Swap(i, j int) {
+	buf := a[i]
+	a[i] = a[j]
+	a[j] = buf
 }
 
 const (

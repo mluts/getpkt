@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,10 @@ const (
 	authURLTemplate  = "https://getpocket.com/auth/authorize?request_token={{.Code}}&redirect_uri={{.RedirectURL}}"
 )
 
-var defaultRedirectURL = "http://localhost:9998"
+var (
+	defaultRedirectURL = "http://localhost:9998"
+	articlesLimit      int
+)
 
 func showUsage() {
 	fmt.Printf(`
@@ -24,46 +28,17 @@ Commands:
 	auth
 	sync
 	list
+
+Flags:
 `, path.Base(os.Args[0]))
+
+	flag.PrintDefaults()
 }
 
-func collectArticles(config *appConfig) (result []*Article, err error) {
-	step := 5000
-	offset := 0
-
-	request := RetrieveRequest{
-		ConsumerKey: config.ConsumerKey,
-		AccessToken: config.AccessToken,
-		Sort:        SortNewest,
-	}
-
-	result = make([]*Article, 0)
-
-	fmt.Print("Syncing")
-	for {
-		fmt.Print(".")
-		request.Count = step
-		request.Offset = offset
-		response := RetrieveResponse{}
-
-		err := retrieve(&request, &response)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, article := range response.List {
-			result = append(result, article)
-		}
-
-		offset += step
-
-		if len(response.List) != step {
-			break
-		}
-	}
-	fmt.Print("\n")
-
-	return result, nil
+func init() {
+	flag.Usage = showUsage
+	flag.IntVar(&articlesLimit, "limit", 10, "Articles limit")
+	flag.Parse()
 }
 
 func main() {
@@ -92,6 +67,16 @@ func main() {
 			log.Fatalf("Failed to save articles: %v", err)
 		}
 	case os.Args[1] == "list":
+		articles, err := loadArticles()
+		if err != nil {
+			log.Fatalf("Failed to load articles: %v", err)
+		}
+		for i, article := range articles {
+			if i >= articlesLimit {
+				break
+			}
+			fmt.Printf("URL: %s\nTitle: %s\nID: %s\n\n", article.ResolvedURL, article.ResolvedTitle, article.ItemID)
+		}
 	default:
 		showUsage()
 		os.Exit(1)

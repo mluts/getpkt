@@ -2,9 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
-	"io"
 	"log"
 	"os"
 )
@@ -29,63 +26,16 @@ func readConsumerKey() string {
 	return string(line)
 }
 
+func readConfig(path string) (config *appConfig, err error) {
+	config = &appConfig{}
+	err = readJSON(path, config)
+	return config, err
+}
+
 func writeConfig(path string, config *appConfig) (err error) {
 	err = writeJSON(path, config)
 	log.Println("Config file written")
 	return err
-}
-
-func writeJSON(path string, object interface{}) (err error) {
-	file, err := os.OpenFile(
-		os.ExpandEnv(path),
-		os.O_WRONLY|os.O_CREATE,
-		0600,
-	)
-	if err != nil {
-		return err
-	}
-
-	unformatted := bytes.NewBuffer([]byte{})
-	formatted := bytes.NewBuffer([]byte{})
-
-	encoder := json.NewEncoder(unformatted)
-	err = encoder.Encode(object)
-	if err != nil {
-		return err
-	}
-
-	err = json.Indent(formatted, unformatted.Bytes(), "", "  ")
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(file, formatted)
-
-	return err
-}
-
-func readConfig(path string) (config *appConfig, err error) {
-	var (
-		file *os.File
-	)
-	path = os.ExpandEnv(path)
-	config = &appConfig{}
-
-	file, err = os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	io := bufio.NewReader(file)
-	decoder := json.NewDecoder(io)
-	for decoder.More() {
-		err = decoder.Decode(config)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return config, err
 }
 
 func initConfig() (config *appConfig) {
