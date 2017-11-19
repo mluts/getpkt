@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // Article represents a single article in /v3/get list
@@ -27,6 +29,15 @@ type Article struct {
 	HasImage      string `json:"has_image"`
 	WordsCount    string `json:"words_count"`
 	TimeAdded     string `json:"time_added"`
+}
+
+// TimeAddedTime returns TimeAdded as time.Time
+func (a *Article) TimeAddedTime() time.Time {
+	t, err := strconv.Atoi(a.TimeAdded)
+	if err != nil {
+		panic(err)
+	}
+	return time.Unix(int64(t), 0)
 }
 
 // Articles is a collection of Article
