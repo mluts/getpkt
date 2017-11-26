@@ -15,8 +15,7 @@ func loadArticles() (articles Articles, err error) {
 	return articles, err
 }
 
-func collectArticles(config *appConfig) (result Articles, err error) {
-	step := 5000
+func collectArticles(config *appConfig, limit int, step int) (result Articles, err error) {
 	offset := 0
 
 	request := RetrieveRequest{
@@ -45,7 +44,7 @@ func collectArticles(config *appConfig) (result Articles, err error) {
 
 		offset += step
 
-		if len(response.List) != step {
+		if len(response.List) != step || (limit > 0 && len(response.List) >= limit) {
 			break
 		}
 	}

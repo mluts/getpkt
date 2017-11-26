@@ -11,13 +11,15 @@ import (
 )
 
 const (
-	configFilePath   = "$HOME/.config/getpkt/config.json"
-	articlesFilePath = "$HOME/.config/getpkt/articles.json"
-	authURLTemplate  = "https://getpocket.com/auth/authorize?request_token={{.Code}}&redirect_uri={{.RedirectURL}}"
+	configFilePath       = "$HOME/.config/getpkt/config.json"
+	articlesFilePath     = "$HOME/.config/getpkt/articles.json"
+	authURLTemplate      = "https://getpocket.com/auth/authorize?request_token={{.Code}}&redirect_uri={{.RedirectURL}}"
+	articlesDownloadStep = 4000
 )
 
 var (
 	defaultRedirectURL = "http://localhost:9998"
+	useCache           = false
 	articlesLimit      int
 )
 
@@ -60,7 +62,7 @@ func cmdAuth() {
 func cmdSync() {
 	config := mustInitConfig()
 
-	articles, err := collectArticles(config)
+	articles, err := collectArticles(config, 0, articlesDownloadStep)
 	if err != nil {
 		log.Fatalf("Failed to download articles: %v", err)
 	}
@@ -72,15 +74,27 @@ func cmdSync() {
 }
 
 func cmdList() {
-	articles, err := loadArticles()
-	if err != nil {
-		log.Fatalf("Failed to load articles: %v", err)
-	}
-	for i, article := range articles {
-		if i >= articlesLimit {
-			break
+	if useCache {
+		articles, err := loadArticles()
+		if err != nil {
+			log.Fatalf("Failed to load articles: %v", err)
 		}
-		printArticle(article)
+		for i, article := range articles {
+			if articlesLimit > 0 && i >= articlesLimit {
+				break
+			}
+			printArticle(article)
+		}
+	} else {
+		config := initConfig()
+		articles, err := collectArticles(config, articlesLimit, articlesLimit)
+		if err != nil {
+			log.Fatalf("Failed to get articles: %v", err)
+
+		}
+		for _, article := range articles {
+			printArticle(article)
+		}
 	}
 }
 
@@ -107,6 +121,7 @@ func cmdRand() {
 func init() {
 	flag.Usage = showUsage
 	flag.IntVar(&articlesLimit, "limit", 10, "Articles limit")
+	flag.BoolVar(&useCache, "cache", false, "Use articles cache")
 	flag.Parse()
 }
 
