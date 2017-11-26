@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"sort"
 )
 
@@ -26,9 +27,9 @@ func collectArticles(config *appConfig, limit int, step int) (result Articles, e
 
 	result = make([]*Article, 0)
 
-	fmt.Print("Syncing")
+	log.Print("Downloading")
 	for {
-		fmt.Print(".")
+		log.Print(".")
 		request.Count = step
 		request.Offset = offset
 		response := RetrieveResponse{}
@@ -48,7 +49,7 @@ func collectArticles(config *appConfig, limit int, step int) (result Articles, e
 			break
 		}
 	}
-	fmt.Print("\n")
+	log.Print("\n")
 
 	sort.Sort(result)
 

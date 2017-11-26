@@ -24,7 +24,7 @@ var (
 )
 
 func showUsage() {
-	fmt.Printf(`
+	log.Printf(`
 Usage:
 	%s command
 
@@ -123,6 +123,8 @@ func init() {
 	flag.IntVar(&articlesLimit, "limit", 10, "Articles limit")
 	flag.BoolVar(&useCache, "cache", false, "Use articles cache")
 	flag.Parse()
+
+	log.SetOutput(os.Stderr)
 }
 
 func main() {
