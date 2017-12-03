@@ -31,6 +31,11 @@ type Article struct {
 	TimeAdded     string `json:"time_added"`
 }
 
+type ApiCredentials struct {
+	ConsumerKey string `json:"consumer_key"`
+	AccessToken string `json:"access_token"`
+}
+
 // TimeAddedTime returns TimeAdded as time.Time
 func (a *Article) TimeAddedTime() time.Time {
 	t, err := strconv.Atoi(a.TimeAdded)
@@ -74,25 +79,45 @@ const (
 	SortNewest = "newest"
 	// SortOldest sorts from old to new
 	SortOldest = "oldest"
+	// ActionArchive is a part of ModifyAction
+	ActionArchive = "archive"
 )
 
 // RetrieveRequest holds the json scheme for /v3/get request
 type RetrieveRequest struct {
-	State       string `json:"state"`
-	Favorite    int    `json:"favorite"`
-	Tag         string `json:"tag"`
-	Count       int    `json:"count"`
-	Offset      int    `json:"offset"`
-	Sort        string `json:"sort"`
-	DetailType  string `json:"detailType"`
-	ConsumerKey string `json:"consumer_key"`
-	AccessToken string `json:"access_token"`
+	State      string `json:"state"`
+	Favorite   int    `json:"favorite"`
+	Tag        string `json:"tag"`
+	Count      int    `json:"count"`
+	Offset     int    `json:"offset"`
+	Sort       string `json:"sort"`
+	DetailType string `json:"detailType"`
+	ApiCredentials
 }
 
 // RetrieveResponse holds the json scheme for /v3/get response
 type RetrieveResponse struct {
 	Status int `json:"status"`
 	List   map[string]*Article
+}
+
+// ModifyAction is a part of ModifyRequest
+type ModifyAction struct {
+	Action string `json:"action"`
+	ItemID string `json:"item_id"`
+	Time   int64  `json:"time"`
+}
+
+// ModifyRequest holds the json scheme for /v3/send request
+type ModifyRequest struct {
+	Actions []*ModifyAction `json:"actions"`
+	ApiCredentials
+}
+
+// ModifyResponse holds the json scheme for /v3/send response
+type ModifyResponse struct {
+	ActionResults []bool `json:"action_results"`
+	Status        int    `json:"status"`
 }
 
 func makeAuthURL(code, redirectURL string) string {
@@ -165,4 +190,37 @@ func retrieve(request *RetrieveRequest, response *RetrieveResponse) error {
 		request,
 		response,
 	)
+}
+
+func modify(request *ModifyRequest, response *ModifyResponse) error {
+	return doJSONRequest(
+		"https://getpocket.com/v3/send",
+		request,
+		response,
+	)
+}
+
+func archive(credentials ApiCredentials, itemID string) (err error) {
+	actions := []*ModifyAction{
+		&ModifyAction{
+			ActionArchive,
+			itemID,
+			time.Now().Unix(),
+		},
+	}
+	request := &ModifyRequest{
+		actions, credentials,
+	}
+	response := &ModifyResponse{}
+
+	err = modify(request, response)
+	if err != nil {
+		return err
+	}
+
+	if response.Status == 0 {
+		return fmt.Errorf("Failed to do an update on item %s", itemID)
+	}
+
+	return nil
 }

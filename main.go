@@ -32,6 +32,7 @@ Commands:
 	auth
 	sync
 	list
+	archive ITEM_ID
 
 Flags:
 `, path.Base(os.Args[0]))
@@ -118,6 +119,16 @@ func cmdRand() {
 	printArticle(article)
 }
 
+func cmdArchive(item string) {
+	config := initConfig()
+	err := archive(ApiCredentials(*config), item)
+	if err != nil {
+		log.Fatalf("Failed to archive item %s: %v", item, err)
+	} else {
+		log.Print("Archived!")
+	}
+}
+
 func init() {
 	flag.Usage = showUsage
 	flag.IntVar(&articlesLimit, "limit", 10, "Articles limit")
@@ -144,6 +155,13 @@ func main() {
 		cmdList()
 	case "rand":
 		cmdRand()
+	case "archive":
+		item := flag.Arg(1)
+		if len(item) == 0 {
+			showUsage()
+			os.Exit(1)
+		}
+		cmdArchive(flag.Arg(1))
 	default:
 		showUsage()
 		os.Exit(1)

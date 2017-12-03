@@ -19,11 +19,10 @@ func loadArticles() (articles Articles, err error) {
 func collectArticles(config *appConfig, limit int, step int) (result Articles, err error) {
 	offset := 0
 
-	request := RetrieveRequest{
-		ConsumerKey: config.ConsumerKey,
-		AccessToken: config.AccessToken,
-		Sort:        SortNewest,
-	}
+	request := RetrieveRequest{}
+	request.ConsumerKey = config.ConsumerKey
+	request.AccessToken = config.AccessToken
+	request.Sort = SortNewest
 
 	result = make([]*Article, 0)
 
